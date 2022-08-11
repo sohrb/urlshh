@@ -24,18 +24,22 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
       })
 
       if (shortLink) {
-        return res.status(200).json({ slug: shortLink.slug })
+        return res
+          .status(200)
+          .json({ shortLink: `http://localhost:3000/api/${shortLink.slug}` })
       }
 
       const slug = nanoid(6)
-      await prisma.shortLink.create({
+      const newShortLink = await prisma.shortLink.create({
         data: {
           url: normalizedUrl,
           slug: slug,
         },
       })
 
-      return res.status(201).json({ slug: slug })
+      return res
+        .status(201)
+        .json({ shortLink: `http://localhost:3000/api/${newShortLink.slug}` })
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === "P2002") {
@@ -43,10 +47,10 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         }
       }
 
-      console.table(error)
+      console.error(error)
       return res.status(500).json({ error: "Server error" })
     }
   }
 
-  return res.status(405).json({ message: "Only use POST method on this route" })
+  return res.status(405).json({ error: "Only use POST method on this route" })
 }
